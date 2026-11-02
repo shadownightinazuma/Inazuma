@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Inazuma Rogue - Squad</title>
+    <title>Inazuma Squad Rogue</title>
     <style>
-        /* Couleurs exactes du jeu original */
         body {
             background-color: #0b112c;
             color: #ffffff;
@@ -17,7 +16,6 @@
             touch-action: manipulation;
         }
 
-        /* Barre supérieure du jeu */
         .top-bar {
             background-color: #11224d;
             border: 2px solid #3b5998;
@@ -30,16 +28,10 @@
             justify-content: center;
             gap: 15px;
             margin-bottom: 15px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
         }
 
-        .secret-trigger {
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-        }
+        .secret-trigger { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 
-        /* Boutons de contrôle */
-        .btn-container { margin-bottom: 15px; }
         .btn {
             background: linear-gradient(#1e3799, #0c2461);
             border: 2px solid #4a69bd;
@@ -50,110 +42,89 @@
             cursor: pointer;
             border-radius: 4px;
             margin: 4px;
-            font-family: inherit;
         }
         .btn:active { background: #0c2461; }
 
-        /* Panneau de triche admin */
         #creator-zone {
             display: none;
             background-color: rgba(241, 196, 15, 0.1);
             border: 2px dashed #f1c40f;
             padding: 12px;
-            max-width: 90%;
             margin: 10px auto;
             border-radius: 6px;
+            max-width: 450px;
         }
-        .btn-creator { background: linear-gradient(#f1c40f, #f39c12); color: #000; border-color: #fff; }
 
-        /* Grille de jeu (Copie de l'interface d'origine) */
         .grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
             max-width: 450px;
-            margin: 0 auto;
+            margin: 0 auto 20px auto;
         }
 
-        /* Style exact des cartes de joueurs bloqués/débloqués */
         .card {
             background-color: #070b1e;
             border: 2px solid #1c2d5a;
             padding: 6px 4px;
-            text-align: center;
-            opacity: 0.15; /* Grisé si bloqué */
+            opacity: 0.15;
             transition: all 0.2s ease;
         }
         
-        .card.unlocked {
-            opacity: 1;
-            border: 2px solid #f1c40f; /* Contour doré comme vos photos */
-        }
+        .card.unlocked { opacity: 1; border: 2px solid #f1c40f; }
 
-        .avatar {
-            background-color: #f39c12; /* Fond orange des personnages */
-            font-size: 32px;
-            padding: 8px 0;
-            margin-bottom: 4px;
-            border: 1px solid #000;
-        }
-        
-        /* Fond bleu pour les types Vent/Wind */
+        .avatar { font-size: 32px; padding: 8px 0; margin-bottom: 4px; border: 1px solid #000; background-color: #f39c12; }
         .card.wind .avatar { background-color: #2980b9; }
+        .card.wood .avatar { background-color: #27ae60; }
+        .card.mountain .avatar { background-color: #d35400; }
 
-        .name { font-size: 12px; font-weight: bold; color: #fff; margin-bottom: 2px; text-shadow: 1px 1px #000; }
-        
-        .rarity-box {
-            background-color: #f39c12;
-            color: #000;
-            font-size: 9px;
-            font-weight: bold;
-            padding: 1px 2px;
-            margin: 2px auto;
-            width: fit-content;
-        }
-
-        .stars { color: #f1c40f; font-size: 10px; margin: 2px 0; }
-        
-        .stats-box {
-            background-color: #11224d;
-            border: 1px solid #1c2d5a;
-            font-size: 10px;
-            padding: 2px;
-            display: flex;
-            justify-content: space-between;
-            color: #8e9bb0;
-        }
+        .name { font-size: 12px; font-weight: bold; margin-bottom: 2px; text-shadow: 1px 1px #000; }
+        .rarity-box { background-color: #f39c12; color: #000; font-size: 9px; font-weight: bold; margin: 2px auto; width: fit-content; padding: 1px 3px; }
+        .stats-box { background-color: #11224d; border: 1px solid #1c2d5a; font-size: 10px; padding: 2px; display: flex; justify-content: space-between; }
         .rating-num { color: #f1c40f; font-weight: bold; }
+
+        /* Terrain de Match */
+        .match-field {
+            background-color: #1e272e;
+            border: 2px solid #34495e;
+            max-width: 450px;
+            margin: 20px auto;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .match-log { background-color: #000; color: #2ecc71; padding: 10px; font-size: 11px; text-align: left; height: 100px; overflow-y: auto; margin-top: 10px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <!-- Barre supérieure identique -->
     <div class="top-bar">
         <span class="secret-trigger" onclick="secretTap()">◀</span>
-        <span>Squad</span>
+        <span>Inazuma Squad Rogue</span>
         <span>⚡</span>
     </div>
     
-    <!-- Zone Créateur Cachée -->
     <div id="creator-zone">
-        <button class="btn btn-creator" onclick="unlockAllPlayers()">🔓 CRÉATEUR : TOUT DÉBLOQUER</button>
+        <button class="btn" style="background: linear-gradient(#f1c40f, #f39c12); color: #000;" onclick="unlockAllPlayers()">🔓 TOUT DÉBLOQUER (CRÉATEUR)</button>
     </div>
 
-    <!-- Actions du jeu -->
-    <div class="btn-container">
-        <button class="btn" onclick="triggerGacha()">🎲 Tirer un Joueur (Gacha)</button>
-        <button class="btn" style="background: #c0392b; border-color: #e74c3c;" onclick="resetGame()">🔄 Reset</button>
+    <div style="margin-bottom: 15px;">
+        <button class="btn" onclick="triggerGacha()">🎲 Recruter (Gacha)</button>
+        <button class="btn" style="background: #c0392b;" onclick="resetGame()">🔄 Reset</button>
     </div>
 
     <!-- Grille des Joueurs -->
     <div class="grid" id="player-grid"></div>
 
+    <!-- Mode Match de Foot -->
+    <div class="match-field">
+        <h3 style="margin: 0 0 10px 0; color: #f1c40f; font-size: 15px;">⚽ STAGE DE MATCH (5 vs 5)</h3>
+        <button class="btn" style="background: #27ae60; width: 100%; font-size: 14px;" onclick="startMatch()">🔥 LANCER LE MATCH</button>
+        <div class="match-log" id="match-log">Prêt pour le coup d'envoi... Débloquez au moins un joueur !</div>
+    </div>
+
     <script>
         const FIRST_TIME_PASSWORD = "admin"; 
 
-        // Les vrais personnages présents sur vos captures d'écran !
         const playersData = [
             { id: 1, name: "Axel", rating: 96, element: "Fire", icon: "🔥", type: "fire" },
             { id: 2, name: "Froste", rating: 97, element: "Wind", icon: "❄️", type: "wind" },
@@ -167,12 +138,8 @@
         ];
 
         let unlockedPlayers = JSON.parse(localStorage.getItem('inazuma_unlocked')) || [];
-        let isVerifiedCreator = localStorage.getItem('is_creator_device') === 'true';
-
-        if (isVerifiedCreator) {
-            window.addEventListener('DOMContentLoaded', () => {
-                document.getElementById('creator-zone').style.display = 'block';
-            });
+        if (localStorage.getItem('is_creator_device') === 'true') {
+            window.addEventListener('DOMContentLoaded', () => document.getElementById('creator-zone').style.display = 'block');
         }
 
         function renderGrid() {
@@ -186,11 +153,7 @@
                     <div class="avatar">${player.icon}</div>
                     <div class="name">${player.name}</div>
                     <div class="rarity-box">Legendary</div>
-                    <div class="stars">★★★★★</div>
-                    <div class="stats-box">
-                        <span>Rating <span class="rating-num">${player.rating}</span></span>
-                        <span style="color:#e67e22">${player.element}</span>
-                    </div>
+                    <div class="stats-box"><span>PR <span class="rating-num">${player.rating}</span></span><span>${player.element}</span></div>
                 `;
                 grid.appendChild(card);
             });
@@ -199,8 +162,8 @@
         function triggerGacha() {
             const locked = playersData.filter(p => !unlockedPlayers.includes(p.id));
             if (locked.length === 0) return;
-            const luckyPlayer = locked[Math.floor(Math.random() * locked.length)];
-            unlockedPlayers.push(luckyPlayer.id);
+            const lucky = locked[Math.floor(Math.random() * locked.length)];
+            unlockedPlayers.push(lucky.id);
             localStorage.setItem('inazuma_unlocked', JSON.stringify(unlockedPlayers));
             renderGrid();
         }
@@ -216,29 +179,54 @@
             unlockedPlayers = [];
             localStorage.removeItem('inazuma_unlocked');
             renderGrid();
+            document.getElementById('match-log').innerText = "Données réinitialisées.";
         }
 
-        // TRIPLE APPUIS SUR LA FLÈCHE "RETOUR" (◀) POUR LE CRÉATEUR
-        let tapCount = 0;
-        let lastTap = 0;
+        /* VRAI MOTEUR DE MATCH SIMPLIFIÉ */
+        function startMatch() {
+            const log = document.getElementById('match-log');
+            if (unlockedPlayers.length === 0) {
+                log.innerText = "⚠️ Erreur: Recrute au moins un joueur via le Gacha avant de jouer !";
+                return;
+            }
 
+            log.innerHTML = "⚽ Début du match !<br>";
+            
+            // Calcul de la puissance totale de ton équipe active
+            let teamPower = 0;
+            playersData.forEach(p => {
+                if (unlockedPlayers.includes(p.id)) teamPower += p.rating;
+            });
+
+            // Puissance adverse aléatoire selon le niveau global (Simule le mode Roguelite)
+            let enemyPower = Math.floor(Math.random() * 300) + 200;
+
+            setTimeout(() => {
+                log.innerHTML += `⚔️ Ta force : ${teamPower} vs Force adverse : ${enemyPower}<br>`;
+                if (teamPower >= enemyPower) {
+                    let vosButs = Math.floor(Math.random() * 3) + 1;
+                    let leursButs = Math.floor(Math.random() * vosButs);
+                    log.innerHTML += `🎉 VICTOIRE ! Score final : ${vosButs} - ${leursButs} ! Tu passes au Stage suivant.`;
+                } else {
+                    let leursButs = Math.floor(Math.random() * 3) + 1;
+                    let vosButs = Math.floor(Math.random() * leursButs);
+                    log.innerHTML += `❌ DÉFAITE ! Score final : ${vosButs} - ${leursButs}. Entraîne tes joueurs !`;
+                }
+            }, 800);
+        }
+
+        // Système Admin
+        let tapCount = 0, lastTap = 0;
         function secretTap() {
             if (localStorage.getItem('is_creator_device') === 'true') return;
-
             const now = new Date().getTime();
-            const timespace = now - lastTap;
-            if (timespace < 600 && timespace > 0) tapCount++; else tapCount = 1;
+            if (now - lastTap < 600) tapCount++; else tapCount = 1;
             lastTap = now;
-
             if (tapCount === 3) {
                 tapCount = 0;
-                const input = prompt("Code secret Créateur :");
-                if (input === FIRST_TIME_PASSWORD) {
+                if (prompt("Code Créateur :") === FIRST_TIME_PASSWORD) {
                     localStorage.setItem('is_creator_device', 'true');
                     document.getElementById('creator-zone').style.display = 'block';
-                    alert("Appareil validé comme unique Créateur !");
-                } else {
-                    alert("Code incorrect.");
                 }
             }
         }
