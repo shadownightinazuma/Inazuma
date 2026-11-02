@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Inazuma Rogue - Squad</title>
+    <style>
+        /* Couleurs exactes du jeu original */
+        body {
+            background-color: #0b112c;
+            color: #ffffff;
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+            padding: 10px;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* Barre supérieure du jeu */
+        .top-bar {
+            background-color: #11224d;
+            border: 2px solid #3b5998;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 20px;
+            color: #f1c40f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .secret-trigger {
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Boutons de contrôle */
+        .btn-container { margin-bottom: 15px; }
+        .btn {
+            background: linear-gradient(#1e3799, #0c2461);
+            border: 2px solid #4a69bd;
+            color: #fff;
+            padding: 12px 18px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            margin: 4px;
+            font-family: inherit;
+        }
+        .btn:active { background: #0c2461; }
+
+        /* Panneau de triche admin */
+        #creator-zone {
+            display: none;
+            background-color: rgba(241, 196, 15, 0.1);
+            border: 2px dashed #f1c40f;
+            padding: 12px;
+            max-width: 90%;
+            margin: 10px auto;
+            border-radius: 6px;
+        }
+        .btn-creator { background: linear-gradient(#f1c40f, #f39c12); color: #000; border-color: #fff; }
+
+        /* Grille de jeu (Copie de l'interface d'origine) */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            max-width: 450px;
+            margin: 0 auto;
+        }
+
+        /* Style exact des cartes de joueurs bloqués/débloqués */
+        .card {
+            background-color: #070b1e;
+            border: 2px solid #1c2d5a;
+            padding: 6px 4px;
+            text-align: center;
+            opacity: 0.15; /* Grisé si bloqué */
+            transition: all 0.2s ease;
+        }
+        
+        .card.unlocked {
+            opacity: 1;
+            border: 2px solid #f1c40f; /* Contour doré comme vos photos */
+        }
+
+        .avatar {
+            background-color: #f39c12; /* Fond orange des personnages */
+            font-size: 32px;
+            padding: 8px 0;
+            margin-bottom: 4px;
+            border: 1px solid #000;
+        }
+        
+        /* Fond bleu pour les types Vent/Wind */
+        .card.wind .avatar { background-color: #2980b9; }
+
+        .name { font-size: 12px; font-weight: bold; color: #fff; margin-bottom: 2px; text-shadow: 1px 1px #000; }
+        
+        .rarity-box {
+            background-color: #f39c12;
+            color: #000;
+            font-size: 9px;
+            font-weight: bold;
+            padding: 1px 2px;
+            margin: 2px auto;
+            width: fit-content;
+        }
+
+        .stars { color: #f1c40f; font-size: 10px; margin: 2px 0; }
+        
+        .stats-box {
+            background-color: #11224d;
+            border: 1px solid #1c2d5a;
+            font-size: 10px;
+            padding: 2px;
+            display: flex;
+            justify-content: space-between;
+            color: #8e9bb0;
+        }
+        .rating-num { color: #f1c40f; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- Barre supérieure identique -->
+    <div class="top-bar">
+        <span class="secret-trigger" onclick="secretTap()">◀</span>
+        <span>Squad</span>
+        <span>⚡</span>
+    </div>
+    
+    <!-- Zone Créateur Cachée -->
+    <div id="creator-zone">
+        <button class="btn btn-creator" onclick="unlockAllPlayers()">🔓 CRÉATEUR : TOUT DÉBLOQUER</button>
+    </div>
+
+    <!-- Actions du jeu -->
+    <div class="btn-container">
+        <button class="btn" onclick="triggerGacha()">🎲 Tirer un Joueur (Gacha)</button>
+        <button class="btn" style="background: #c0392b; border-color: #e74c3c;" onclick="resetGame()">🔄 Reset</button>
+    </div>
+
+    <!-- Grille des Joueurs -->
+    <div class="grid" id="player-grid"></div>
+
+    <script>
+        const FIRST_TIME_PASSWORD = "admin"; 
+
+        // Les vrais personnages présents sur vos captures d'écran !
+        const playersData = [
+            { id: 1, name: "Axel", rating: 96, element: "Fire", icon: "🔥", type: "fire" },
+            { id: 2, name: "Froste", rating: 97, element: "Wind", icon: "❄️", type: "wind" },
+            { id: 3, name: "Gele", rating: 103, element: "Wind", icon: "🧟", type: "wind" },
+            { id: 4, name: "Grengo", rating: 105, element: "Fire", icon: "🎃", type: "fire" },
+            { id: 5, name: "Hatch", rating: 104, element: "Wood", icon: "🧟‍♂️", type: "wood" },
+            { id: 6, name: "Jude Sharp", rating: 106, element: "Wind", icon: "👁️", type: "wind" },
+            { id: 7, name: "Skipper", rating: 105, element: "Wood", icon: "🏴‍☠️", type: "wood" },
+            { id: 8, name: "Nathan", rating: 97, element: "Wind", icon: "🏃", type: "wind" },
+            { id: 9, name: "Mark", rating: 95, element: "Mount.", icon: "🧤", type: "mountain" }
+        ];
+
+        let unlockedPlayers = JSON.parse(localStorage.getItem('inazuma_unlocked')) || [];
+        let isVerifiedCreator = localStorage.getItem('is_creator_device') === 'true';
+
+        if (isVerifiedCreator) {
+            window.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('creator-zone').style.display = 'block';
+            });
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('player-grid');
+            grid.innerHTML = "";
+            playersData.forEach(player => {
+                const isUnlocked = unlockedPlayers.includes(player.id);
+                const card = document.createElement('div');
+                card.className = `card ${isUnlocked ? 'unlocked' : ''} ${player.type}`;
+                card.innerHTML = `
+                    <div class="avatar">${player.icon}</div>
+                    <div class="name">${player.name}</div>
+                    <div class="rarity-box">Legendary</div>
+                    <div class="stars">★★★★★</div>
+                    <div class="stats-box">
+                        <span>Rating <span class="rating-num">${player.rating}</span></span>
+                        <span style="color:#e67e22">${player.element}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function triggerGacha() {
+            const locked = playersData.filter(p => !unlockedPlayers.includes(p.id));
+            if (locked.length === 0) return;
+            const luckyPlayer = locked[Math.floor(Math.random() * locked.length)];
+            unlockedPlayers.push(luckyPlayer.id);
+            localStorage.setItem('inazuma_unlocked', JSON.stringify(unlockedPlayers));
+            renderGrid();
+        }
+
+        function unlockAllPlayers() {
+            if (localStorage.getItem('is_creator_device') !== 'true') return;
+            unlockedPlayers = playersData.map(p => p.id);
+            localStorage.setItem('inazuma_unlocked', JSON.stringify(unlockedPlayers));
+            renderGrid();
+        }
+
+        function resetGame() {
+            unlockedPlayers = [];
+            localStorage.removeItem('inazuma_unlocked');
+            renderGrid();
+        }
+
+        // TRIPLE APPUIS SUR LA FLÈCHE "RETOUR" (◀) POUR LE CRÉATEUR
+        let tapCount = 0;
+        let lastTap = 0;
+
+        function secretTap() {
+            if (localStorage.getItem('is_creator_device') === 'true') return;
+
+            const now = new Date().getTime();
+            const timespace = now - lastTap;
+            if (timespace < 600 && timespace > 0) tapCount++; else tapCount = 1;
+            lastTap = now;
+
+            if (tapCount === 3) {
+                tapCount = 0;
+                const input = prompt("Code secret Créateur :");
+                if (input === FIRST_TIME_PASSWORD) {
+                    localStorage.setItem('is_creator_device', 'true');
+                    document.getElementById('creator-zone').style.display = 'block';
+                    alert("Appareil validé comme unique Créateur !");
+                } else {
+                    alert("Code incorrect.");
+                }
+            }
+        }
+
+        renderGrid();
+    </script>
+</body>
+</html>
